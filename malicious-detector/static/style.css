@@ -1,0 +1,118 @@
+/* Background Gradient */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #15173D, #982598, #E491C9);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+}
+
+@keyframes gradientBG {
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+/* Card Styling */
+.card {
+    width: 520px;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    background-color: #F1E9E9;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #15173D;
+}
+
+/* Inputs and Button */
+input, select {
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid #982598;
+    transition: 0.3s;
+}
+
+input:focus, select:focus {
+    border-color: #E491C9;
+    box-shadow: 0 0 10px rgba(232,145,201,0.5);
+    outline: none;
+}
+
+button {
+    padding: 10px 15px;
+    background: #982598;
+    color: #F1E9E9;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    width: 100%;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #E491C9;
+    color: #15173D;
+    transform: scale(1.05);
+    cursor: pointer;
+}
+
+/* Progress Bar */
+.progress {
+    height: 25px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.progress-bar {
+    line-height: 25px;
+    font-weight: bold;
+    transition: width 1s ease-in-out, background-color 0.5s;
+}
+
+/* Result Text */
+#result {
+    margin-top: 20px;
+    text-align: center;
+    font-weight: bold;
+    color: #15173D;
+    font-size: 1.2em;
+}
+
+/* Rules Tags */
+#rules {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.rule-tag {
+    padding: 5px 10px;
+    border-radius: 12px;
+    background: #982598;
+    color: #F1E9E9;
+    font-size: 0.9em;
+    transition: transform 0.3s;
+}
+
+.rule-tag:hover {
+    transform: scale(1.1);
+    background: #E491C9;
+    color: #15173D;
+}
