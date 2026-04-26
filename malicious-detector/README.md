@@ -47,16 +47,22 @@ This project detects malicious or suspicious patterns in:
 	http://127.0.0.1:5000
 	```
 
-## New Payload Detector (PDA-Inspired)
+## New Payload Detector (PDA-Inspired & TM-De-obfuscator)
 
 Use input type `payload` to inspect suspicious command/script strings.
 
-Detailed implementation notes are in `PAYLOAD_PDA_EXPLAIN.md`.
+Detailed implementation notes are in:
+- `PAYLOAD_PDA_EXPLAIN.md` (Stack-based token mapping)
+- `PAYLOAD_TM_EXPLAIN.md` (Tape-based Turing Machine de-obfuscation)
 
 The detector applies pushdown-automaton style checks using a stack:
 - Delimiter balancing for `()`, `{}`, `[]` and quote boundaries
 - Deep nesting and chained operators (for obfuscation patterns)
 - Suspicious execution token clusters (for example `powershell`, `curl`, `base64`, `eval(`)
+
+It also uses a real-time Turing Machine tape rewriter to de-obfuscate inline evasion techniques:
+- Command inline escape characters (`^`, `` ` ``)
+- String concatenation (`'x'+'y'`)
 
 Example payloads to test:
 - `powershell -enc SGVsbG8= ; curl http://10.0.0.1`

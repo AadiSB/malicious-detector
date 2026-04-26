@@ -125,6 +125,80 @@ int count_token_hits(const char *str, const char *tokens[], int token_count) {
     return hits;
 }
 
+int parse_hex_char(char c) {
+    if (isdigit((unsigned char)c)) return c - '0';
+    c = (char)tolower((unsigned char)c);
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    return 0;
+}
+
+// --- TM-Based De-obfuscator (Tape Rewriting) ---
+// This function acts as a Turing Machine read/write head. It scans back and forth,
+// rewriting the tape to collapse string concatenations and remove escape characters.
+void run_tm_deobfuscator(char *tape) {
+    int head = 0;
+    while (tape[head] != '\0') {
+        // Obfuscation Pattern 1: Cmd obfuscation with caret (e.g. c^m^d)
+        if (tape[head] == '^') {
+            memmove(&tape[head], &tape[head + 1], strlen(&tape[head + 1]) + 1);
+            continue;
+        }
+
+        // Obfuscation Pattern 2: PowerShell obfuscation with backtick (e.g. p`o`w`e`r)
+        if (tape[head] == '`') {
+            memmove(&tape[head], &tape[head + 1], strlen(&tape[head + 1]) + 1);
+            continue;
+        }
+
+        // Obfuscation Pattern 3: Single-quote concatenation ('pow'+'ershell')
+        // Removing the "'+'" effectively collapses it.
+        if (tape[head] == '\'' && tape[head + 1] == '+' && tape[head + 2] == '\'') {
+            memmove(&tape[head], &tape[head + 3], strlen(&tape[head + 3]) + 1);
+            if (head > 0) head--; // Step back to re-evaluate surrounding context
+            continue;
+        }
+
+        // Obfuscation Pattern 4: Double-quote concatenation ("pow"+"ershell")
+        if (tape[head] == '"' && tape[head + 1] == '+' && tape[head + 2] == '"') {
+            memmove(&tape[head], &tape[head + 3], strlen(&tape[head + 3]) + 1);
+            if (head > 0) head--;
+            continue;
+        }
+
+        // Obfuscation Pattern 5: Empty quote blocks ("" or '')
+        // Attackers split words using empty quotes: c""md e''xe
+        if ((tape[head] == '\'' && tape[head + 1] == '\'') ||
+            (tape[head] == '"' && tape[head + 1] == '"')) {
+            memmove(&tape[head], &tape[head + 2], strlen(&tape[head + 2]) + 1);
+            if (head > 0) head--;
+            continue;
+        }
+
+        // Obfuscation Pattern 6: Hex escape sequence (\x63 -> c)
+        if (tape[head] == '\\' && (tape[head + 1] == 'x' || tape[head + 1] == 'X') &&
+            isxdigit((unsigned char)tape[head + 2]) && isxdigit((unsigned char)tape[head + 3])) {
+            char decoded = (char)((parse_hex_char(tape[head + 2]) << 4) | parse_hex_char(tape[head + 3]));
+            tape[head] = decoded; // Write the decoded character natively
+            memmove(&tape[head + 1], &tape[head + 4], strlen(&tape[head + 4]) + 1); // Shift tape left by 3
+            if (head > 0) head--; // Step back
+            continue;
+        }
+
+        // Obfuscation Pattern 7: URL Encoding (%63 -> c)
+        if (tape[head] == '%' &&
+            isxdigit((unsigned char)tape[head + 1]) && isxdigit((unsigned char)tape[head + 2])) {
+            char decoded = (char)((parse_hex_char(tape[head + 1]) << 4) | parse_hex_char(tape[head + 2]));
+            tape[head] = decoded;
+            memmove(&tape[head + 1], &tape[head + 3], strlen(&tape[head + 3]) + 1); // Shift tape left by 2
+            if (head > 0) head--;
+            continue;
+        }
+
+        // Move head forward
+        head++;
+    }
+}
+
 int check_file(char *input, char rules[][RULE_LEN], int *rule_count) {
     int score = 0;
 
@@ -324,8 +398,15 @@ int check_payload_pda(char *input, char rules[][RULE_LEN], int *rule_count) {
         add_rule(rules, rule_count, "High Symbol Density");
     }
 
+    char deobfuscated[INPUT_SCAN_LIMIT];
+    strncpy(deobfuscated, input, INPUT_SCAN_LIMIT - 1);
+    deobfuscated[INPUT_SCAN_LIMIT - 1] = '\0';
+
+    // Before signature matching, let the Tape-Based TM De-obfuscator rewrite the string
+    run_tm_deobfuscator(deobfuscated);
+
     char lower[INPUT_SCAN_LIMIT];
-    to_lower_copy(input, lower, INPUT_SCAN_LIMIT);
+    to_lower_copy(deobfuscated, lower, INPUT_SCAN_LIMIT);
 
     const char *execution_tokens[] = {
         "powershell",

@@ -1,0 +1,172 @@
+
+TITLE: TM-Based Correction Module (Automata Project)
+
+--------------------------------------------------
+1. IDEA OF THE ADD-ON
+--------------------------------------------------
+Earlier:
+Input → Detect → Output
+
+Now:
+Input → Detect → Correct → Output + Suggestion
+
+We added a Turing Machine-inspired module that:
+- Scans input
+- Detects errors
+- Rewrites string
+- Suggests corrected output
+
+This upgrades the system from:
+Decision Problem → Function Problem
+
+--------------------------------------------------
+2. WHY Turing Machine?
+--------------------------------------------------
+DFA:
+- Only detects patterns
+
+Turing Machine:
+- Can modify strings
+- Can rewrite input
+
+So we use TM idea for correction.
+
+--------------------------------------------------
+3. SYSTEM FLOW
+--------------------------------------------------
+User Input
+   ↓
+DFA (Detection)
+   ↓
+TM (Correction)
+   ↓
+Output:
+score | status | rules | corrected_string
+
+--------------------------------------------------
+4. MODULE-WISE RULES
+--------------------------------------------------
+
+EMAIL CORRECTOR
+Rules:
+- @@ → @
+- .. → .
+- vom → com
+- cmo → com
+
+Example:
+Input:  a.b@@gmail.vom
+Output: a.b@gmail.com
+
+
+MOBILE CORRECTOR
+Rules:
+- Remove non-digits
+- If >10 digits → add space after 10 digits
+
+Example:
+Input:  98-76-54321012
+Output: 9876543210 12
+
+
+DOMAIN CORRECTOR
+Rules:
+- .. → .
+- cmo → com
+- ocm → com
+
+Example:
+Input:  www..example.cmo
+Output: www.example.com
+
+
+USERNAME CORRECTOR
+Rules:
+- aaa → aa (reduce repetition)
+
+Example:
+Input:  aaaadmin
+Output: aaadmin
+
+
+FILE CORRECTOR
+Rules:
+- .pdf.exe → .pdf
+- .jpg.exe → .jpg
+
+Example:
+Input:  report.pdf.exe
+Output: report.pdf
+
+--------------------------------------------------
+5. CODE EXAMPLE (tm.c)
+--------------------------------------------------
+
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+void correct_email(char *input, char *output)
+{
+    strcpy(output, input);
+    for(int i = 0; output[i]; i++)
+    {
+        if(output[i]=='@' && output[i+1]=='@')
+        {
+            memmove(&output[i], &output[i+1], strlen(output)-i);
+            i--;
+        }
+        if(output[i]=='.' && output[i+1]=='.')
+        {
+            memmove(&output[i], &output[i+1], strlen(output)-i);
+            i--;
+        }
+        if(strncmp(&output[i],"vom",3)==0) output[i]='c';
+        if(strncmp(&output[i],"cmo",3)==0) output[i+1]='o';
+    }
+}
+
+void correct_mobile(char *input, char *output)
+{
+    int j=0;
+    for(int i=0; input[i]; i++)
+        if(isdigit(input[i]))
+            output[j++]=input[i];
+
+    output[j]='\0';
+
+    int len=strlen(output);
+    if(len>10)
+    {
+        for(int i=len;i>=10;i--)
+            output[i+1]=output[i];
+        output[10]=' ';
+    }
+}
+
+void suggest_correction(char *type, char *input, char *output)
+{
+    if(strcmp(type,"email")==0)
+        correct_email(input, output);
+    else if(strcmp(type,"mobile")==0)
+        correct_mobile(input, output);
+    else
+        strcpy(output,input);
+}
+
+--------------------------------------------------
+6. WHAT WAS ADDED TO PROJECT
+--------------------------------------------------
+- New file: tm.c
+- New function: suggest_correction()
+- Updated output format:
+  score|status|rules|corrected_string
+
+--------------------------------------------------
+7. FINAL EXPLANATION (FOR VIVA)
+--------------------------------------------------
+We added a Turing Machine-based correction module that scans input strings,
+detects common errors, and rewrites them to generate a corrected version.
+Each input type has its own correction rules, making the system modular
+and intelligent.
+
